@@ -14,5 +14,21 @@
     "scripts": [
       "background.js"
     ]
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/watch?*",
+        "*://*.youtube.com/embed?*",
+        "*://*.twitch.tv/*",
+        "*://*.netflix.com/WiPlayer?*"
+      ],
+      "js": ["player.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    "pause.js",
+    "play.js"
+  ]
 }
