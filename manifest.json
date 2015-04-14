@@ -3,6 +3,9 @@
   "name": "vsnap",
   "description": "Automatically moves video sites to a window on a secondary monitor",
   "version": "0.1.0",
+  "icons": {
+    "48": "icon-48.png"
+  },
   "permissions": [
     "tabs",
     "*://*.youtube.com/watch?*",
