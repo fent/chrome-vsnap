@@ -40,7 +40,7 @@ chrome.windows.onRemoved.addListener(function(winID) {
 var movedTabs = {};
 var tabStack = [];
 var controlVideoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer)/i;
-var videoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer)/i;
+var videoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|cringechannel\.com\/|dailymotion\.com\/video\/|worldstarhiphop\.com\/videos\/video\.php)/i;
 
 chrome.tabs.onCreated.addListener(function(tab) {
   if (!playerWindow || tab.windowId === playerWindow.id) {
