@@ -51,7 +51,7 @@ chrome.tabs.onCreated.addListener(function(tab) {
   // namely `tab.active` and `tab.url`. So query for it again.
   chrome.tabs.get(tab.id, function(tab) {
     // Only move tab if opened in the background.
-    if (!tab.active && videoSites.test(tab.url)) {
+    if ((!tab.active || !tab.openerTabId) && videoSites.test(tab.url)) {
       var moveInfo = movedTabs[tab.id] = { tabID: tab.id, playingTabs: [] };
       tabStack.push(tab.id);
       chrome.tabs.move(tab.id, {
