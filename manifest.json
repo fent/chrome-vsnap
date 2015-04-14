@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "vsnap",
+  "description": "Automatically moves video sites to a window on a secondary monitor",
+  "version": "0.1.0",
+  "permissions": [
+    "tabs",
+    "*://*.youtube.com/watch?*",
+    "*://*.youtube.com/embed?*",
+    "*://*.twitch.tv/*",
+    "*://*.netflix.com/WiPlayer?*"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  }
+}
