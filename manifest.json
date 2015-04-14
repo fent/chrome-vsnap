@@ -4,7 +4,8 @@
   "description": "Automatically moves video sites to a window on a secondary monitor",
   "version": "0.1.0",
   "icons": {
-    "48": "icon-48.png"
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
   },
   "permissions": [
     "tabs",
