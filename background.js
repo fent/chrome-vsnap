@@ -1,6 +1,7 @@
 /* global chrome */
 /* jshint maxlen: false, quotmark: false */
 
+var extMonitorWindows = [];
 var playerWindow = null;
 var wins = {};
 function findPlayerWindow() {
@@ -8,13 +9,13 @@ function findPlayerWindow() {
   Object.keys(wins).forEach(function(id) {
     list.push(wins[id]);
   });
-  playerWindow = list
+  extMonitorWindows = list
     // Filter out windows that are inside the main window.
     .filter(function(win) {
       return win.top < 0 || win.left < 0 ||
         (win.left > win.width && win.top > win.height);
-    })
-    .sort(function(a, b) {
+    });
+  playerWindow = extMonitorWindows.sort(function(a, b) {
       return b.width * b.height - a.width * a.height;
     })[0];
 }
@@ -43,7 +44,9 @@ var controlVideoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv
 var videoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|cringechannel\.com\/|dailymotion\.com\/video\/|worldstarhiphop\.com\/videos\/video\.php)/i;
 
 chrome.tabs.onCreated.addListener(function(tab) {
-  if (!playerWindow || tab.windowId === playerWindow.id) {
+  if (!playerWindow || extMonitorWindows.some(function(win) {
+    return win.id === tab.windowId;
+  })) {
     return;
   }
 
