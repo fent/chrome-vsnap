@@ -43,12 +43,15 @@ var controlVideoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv
 var videoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer)/i;
 
 chrome.tabs.onCreated.addListener(function(tab) {
+  if (!playerWindow || tab.windowId === playerWindow.id) {
+    return;
+  }
+
   // `tab` doesn't contain some fields when barely created,
   // namely `tab.active` and `tab.url`. So query for it again.
   chrome.tabs.get(tab.id, function(tab) {
     // Only move tab if opened in the background.
-    if (playerWindow && tab.windowId !== playerWindow.id &&
-        !tab.active && videoSites.test(tab.url)) {
+    if (!tab.active && videoSites.test(tab.url)) {
       var moveInfo = movedTabs[tab.id] = { tabID: tab.id, playingTabs: [] };
       tabStack.push(tab.id);
       chrome.tabs.move(tab.id, {
