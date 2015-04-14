@@ -30,5 +30,13 @@
   "web_accessible_resources": [
     "pause.js",
     "play.js"
-  ]
+  ],
+  "commands": {
+    "close-moved-tab": {
+      "suggested_key": {
+        "default": "Alt+X"
+      },
+      "description": "Close last moved tab"
+    }
+  }
 }

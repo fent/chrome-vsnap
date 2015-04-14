@@ -38,6 +38,7 @@ chrome.windows.onRemoved.addListener(function(winID) {
 
 
 var movedTabs = {};
+var tabStack = [];
 var controlVideoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer)/i;
 var videoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer)/i;
 
@@ -49,6 +50,7 @@ chrome.tabs.onCreated.addListener(function(tab) {
     if (playerWindow && tab.windowId !== playerWindow.id &&
         !tab.active && videoSites.test(tab.url)) {
       var moveInfo = movedTabs[tab.id] = { tabID: tab.id, playingTabs: [] };
+      tabStack.push(tab.id);
       chrome.tabs.move(tab.id, {
         windowId: playerWindow.id,
         index: -1,
@@ -95,4 +97,23 @@ chrome.tabs.onRemoved.addListener(function(tabID, info) {
   });
 
   delete movedTabs[tabID];
+  var i = tabStack.indexOf(tabID);
+  if (i > -1) { tabStack.splice(i, 1); }
+});
+
+function checkLastTab() {
+  if (!tabStack.length) { return; }
+  var tabID = tabStack.pop();
+  chrome.tabs.get(tabID, function(tab) {
+    // Only close tab if it's active and still showing a video.
+    if (tab.active && videoSites.test(tab.url)) {
+      chrome.tabs.remove(tabID);
+    } else {
+      checkLastTab();
+    }
+  });
+}
+
+chrome.commands.onCommand.addListener(function(command) {
+  if (command === 'close-moved-tab') { checkLastTab(); }
 });
