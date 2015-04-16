@@ -13,6 +13,8 @@ The following are supported:
 * dailymotion
 * worldstarhiphop
 * cringechannel
+* liveleak
+* efukt
 
 The tabs on the same window that have playing videos will be paused. The following are supported for being paused:
 
