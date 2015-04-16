@@ -38,9 +38,27 @@ chrome.windows.onRemoved.addListener(function(winID) {
 });
 
 
+// Used to keep track of which tabs have been moved,
+// so that when they are removed, vsnap knows to play any paused tabs.
 var movedTabs = {};
+
+// The close last moved shortcut uses this to know what tabs were moved
+// in what order.
 var tabStack = [];
+
+// `player.js` script is executed in a tab so it can listen to messages
+// from vsnap to know when to pause/play videos.
+// It's executed instead of added from a content script so that it runs
+// after vsnap has been installed or reloaded without having to
+// reload the tab.
+var playerExecd = {};
+
+// Sites which their players can be controlled. Other tabs in the same window
+// in which a tab is moved, which match any of these sites, will be paused
+// if they have any playing videos.
 var controlVideoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv\/[a-z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer)/i;
+
+// Video sites that will be matched against when a new tab is created.
 var videoSites = /https?:\/\/(www\.)?(youtube\.com\/(watch|embed)|youtu\.be\/[a-z0-9_-]+|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|cringechannel\.com\/|dailymotion\.com\/video\/|worldstarhiphop\.com\/videos\/video\.php|liveleak\.com\/view|efukt\.com)/i;
 
 chrome.tabs.onCreated.addListener(function(tab) {
@@ -68,15 +86,26 @@ chrome.tabs.onCreated.addListener(function(tab) {
       chrome.tabs.query({ windowId: playerWindow.id }, function(tabs) {
         tabs.forEach(function(wintab) {
           if (wintab.id !== tab.id && controlVideoSites.test(wintab.url)) {
-            chrome.tabs.sendMessage(wintab.id, {
-              pause: true
-            }, {}, function(results) {
-              // Take note if the tab was playing a video
-              // so that it can be played when the tab is closed.
-              if (results) {
-                moveInfo.playingTabs.push(wintab.id);
-              }
-            });
+            var pause = function() {
+              chrome.tabs.sendMessage(wintab.id, {
+                pause: true
+              }, {}, function(results) {
+                // Take note if the tab was playing a video
+                // so that it can be played when the tab is closed.
+                if (results) {
+                  moveInfo.playingTabs.push(wintab.id);
+                }
+              });
+            };
+            if (playerExecd[wintab.id]) { pause(); }
+            else {
+              chrome.tabs.executeScript(wintab.id, {
+                file: 'player.js',
+              }, function() {
+                playerExecd[wintab.id] = true;
+                pause();
+              });
+            }
           }
         });
       });
