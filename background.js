@@ -20,12 +20,18 @@ function findPlayerWindow() {
     })[0];
 }
 
-chrome.windows.getAll({}, function(list) {
-  list.forEach(function(win) {
-    wins[win.id] = win;
+function getAllWins() {
+  chrome.windows.getAll({}, function(list) {
+    wins = {};
+    list.forEach(function(win) {
+      wins[win.id] = win;
+    });
+    findPlayerWindow();
   });
-  findPlayerWindow();
-});
+}
+
+getAllWins();
+setInterval(getAllWins, 300000);
 
 chrome.windows.onCreated.addListener(function(win) {
   wins[win.id] = win;
