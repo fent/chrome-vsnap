@@ -80,6 +80,9 @@ chrome.tabs.onCreated.addListener(function(tab) {
         index: -1,
       }, function() {
         chrome.tabs.update(tab.id, { active: true });
+        if (tab.openerTabId) {
+          chrome.windows.update(tab.windowId, { focused: true });
+        }
       });
 
       // Pause any videos in the same window.
