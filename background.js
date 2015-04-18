@@ -122,6 +122,12 @@ chrome.tabs.onCreated.addListener(function(tab) {
   });
 });
 
+chrome.tabs.onUpdated.addListener(function(tabID, info) {
+  if (info.status || info.url) {
+    delete playerExecd[tabID];
+  }
+});
+
 chrome.tabs.onRemoved.addListener(function(tabID, info) {
   // Don't do anything if this tab isn't one of the moved ones,
   // or if it is but was moved to another window,
