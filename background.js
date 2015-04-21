@@ -62,7 +62,7 @@ var playerExecd = {};
 // Sites which their players can be controlled. Other tabs in the same window
 // in which a tab is moved, which match any of these sites, will be paused
 // if they have any playing videos.
-var controlVideoSites = /https?:\/\/www\.(youtube\.com\/(watch|embed)|twitch\.tv\/[a-z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer)/i;
+var controlVideoSites = /https?:\/\/(www\.)?(youtube\.com\/(watch|embed)|twitch\.tv\/[a-z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer)/i;
 
 // Video sites that will be matched against when a new tab is created.
 var videoSites = /https?:\/\/(www\.)?(youtube\.com\/(watch|embed)|youtu\.be\/[a-z0-9_-]+|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|cringechannel\.com\/|dailymotion\.com\/video\/|worldstarhiphop\.com\/videos\/video\.php|liveleak\.com\/view|efukt\.com)/i;
