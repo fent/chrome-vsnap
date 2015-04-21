@@ -21,5 +21,6 @@ The tabs on the same window that have playing videos will be paused. The followi
 * youtube
 * twitch
 * netflix
+* plex
 
 When the moved tab is closed from the same window it was moved to, any videos that it paused will be played. You can also close the window by a Chrome shortcut set to `Alt + X`.

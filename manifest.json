@@ -12,7 +12,8 @@
     "*://*.youtube.com/watch?*",
     "*://*.youtube.com/embed?*",
     "*://*.twitch.tv/*",
-    "*://*.netflix.com/WiPlayer?*"
+    "*://*.netflix.com/WiPlayer?*",
+    "*://*/web/index.html*"
   ],
   "background": {
     "scripts": [
