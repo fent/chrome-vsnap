@@ -1,9 +1,16 @@
+function getPlayer(byId, name) {
+  var player = byId ?
+    document.getElementById(name) : document.getElementsByTagName(name)[0];
+  return player && (player.playVideo || player.play) ? player : null;
+}
+
 var player =
-  document.getElementById('movie_player') ||
-  document.getElementById('player1') ||
-  document.getElementsByTagName('video')[0] ||
-  document.getElementsByTagName('object')[0] ||
-  document.getElementsByTagName('embed')[0];
+  getPlayer(true, 'movie_player') ||
+  getPlayer(true, 'player1') ||
+  getPlayer(false, 'video') ||
+  getPlayer(false, 'object') ||
+  getPlayer(false, 'embed');
+
 
 if (player) {
   if (player.playVideo) { player.playVideo(); }
