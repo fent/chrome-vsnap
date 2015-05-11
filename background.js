@@ -67,64 +67,68 @@ var controlVideoSites = /https?:\/\/(www\.)?(youtube\.com\/(watch|embed)|twitch\
 // Video sites that will be matched against when a new tab is created.
 var videoSites = /https?:\/\/(www\.)?((m\.)?youtube\.com\/(watch|embed)|youtu\.be\/[a-z0-9_-]+|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|cringechannel\.com\/|dailymotion\.com\/video\/|worldstarhiphop\.com\/videos\/video\.php|liveleak\.com\/view|efukt\.com|facebook\.com\/video\.php)/i;
 
+// `tab` doesn't contain some fields when barely created,
+// namely `tab.active` and `tab.url`. So wait until it is updated.
+var lastTabOpened = null;
+
 chrome.tabs.onCreated.addListener(function(tab) {
   if (!playerWindow || extMonitorWindows.some(function(win) {
     return win.id === tab.windowId;
   })) {
     return;
   }
-
-  // `tab` doesn't contain some fields when barely created,
-  // namely `tab.active` and `tab.url`. So query for it again.
-  chrome.tabs.get(tab.id, function(tab) {
-    // Only move tab if opened in the background.
-    if ((!tab.active || !tab.openerTabId) && videoSites.test(tab.url)) {
-      var moveInfo = movedTabs[tab.id] = { tabID: tab.id, playingTabs: [] };
-      tabStack.push(tab.id);
-      chrome.tabs.move(tab.id, {
-        windowId: playerWindow.id,
-        index: -1,
-      }, function() {
-        chrome.tabs.update(tab.id, { active: true });
-        if (tab.openerTabId) {
-          chrome.windows.update(tab.windowId, { focused: true });
-        }
-      });
-
-      // Pause any videos in the same window.
-      chrome.tabs.query({ windowId: playerWindow.id }, function(tabs) {
-        tabs.forEach(function(wintab) {
-          if (wintab.id !== tab.id && controlVideoSites.test(wintab.url)) {
-            var pause = function() {
-              chrome.tabs.sendMessage(wintab.id, {
-                pause: true
-              }, {}, function(results) {
-                // Take note if the tab was playing a video
-                // so that it can be played when the tab is closed.
-                if (results) {
-                  moveInfo.playingTabs.push(wintab.id);
-                }
-              });
-            };
-            if (playerExecd[wintab.id]) { pause(); }
-            else {
-              chrome.tabs.executeScript(wintab.id, {
-                file: 'player.js',
-              }, function() {
-                playerExecd[wintab.id] = true;
-                pause();
-              });
-            }
-          }
-        });
-      });
-    }
-  });
+  lastTabOpened = tab.id;
 });
 
 chrome.tabs.onUpdated.addListener(function(tabID, info) {
   if (info.status || info.url) {
     delete playerExecd[tabID];
+  }
+  if (lastTabOpened === tabID && info.url) {
+    chrome.tabs.get(tabID, function(tab) {
+      // Only move tab if opened in the background.
+      if ((!tab.active || !tab.openerTabId) && videoSites.test(tab.url)) {
+        var moveInfo = movedTabs[tab.id] = { tabID: tab.id, playingTabs: [] };
+        tabStack.push(tab.id);
+        chrome.tabs.move(tab.id, {
+          windowId: playerWindow.id,
+          index: -1,
+        }, function() {
+          chrome.tabs.update(tab.id, { active: true });
+          if (tab.openerTabId) {
+            chrome.windows.update(tab.windowId, { focused: true });
+          }
+        });
+
+        // Pause any videos in the same window.
+        chrome.tabs.query({ windowId: playerWindow.id }, function(tabs) {
+          tabs.forEach(function(wintab) {
+            if (wintab.id !== tab.id && controlVideoSites.test(wintab.url)) {
+              var pause = function() {
+                chrome.tabs.sendMessage(wintab.id, {
+                  pause: true
+                }, {}, function(results) {
+                  // Take note if the tab was playing a video
+                  // so that it can be played when the tab is closed.
+                  if (results) {
+                    moveInfo.playingTabs.push(wintab.id);
+                  }
+                });
+              };
+              if (playerExecd[wintab.id]) { pause(); }
+              else {
+                chrome.tabs.executeScript(wintab.id, {
+                  file: 'player.js',
+                }, function() {
+                  playerExecd[wintab.id] = true;
+                  pause();
+                });
+              }
+            }
+          });
+        });
+      }
+    });
   }
 });
 
