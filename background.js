@@ -146,7 +146,16 @@ chrome.tabs.onRemoved.addListener(function(tabID, info) {
     // Delay re-playing the video a bit, to give the closed tab some
     // time to process.
     setTimeout(function() {
-      chrome.tabs.sendMessage(tabID, { play: true });
+      chrome.tabs.get(tabID, function(tab) {
+        if (tab.active) {
+          // Only play tab if active in its window.
+          chrome.tabs.sendMessage(tabID, { play: true });
+        } else if (tabStack.length) {
+          // Otherwise, assign it to the next available video tab, if any.
+          var nextTabID = tabStack[tabStack.length - 1];
+          movedTabs[nextTabID].playingTabs.push(tabID);
+        }
+      });
     }, 1000);
   });
 
