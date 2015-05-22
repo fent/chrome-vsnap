@@ -20,6 +20,7 @@ function findPlayerWindow() {
     })[0];
 }
 
+var getAllWinsTimeout;
 function getAllWins() {
   chrome.windows.getAll({}, function(list) {
     wins = {};
@@ -28,10 +29,10 @@ function getAllWins() {
     });
     findPlayerWindow();
   });
+  getAllWinsTimeout = setInterval(getAllWins, 300000);
 }
 
 getAllWins();
-setInterval(getAllWins, 300000);
 
 chrome.windows.onCreated.addListener(function(win) {
   wins[win.id] = win;
@@ -40,7 +41,9 @@ chrome.windows.onCreated.addListener(function(win) {
 
 chrome.windows.onRemoved.addListener(function(winID) {
   delete wins[winID];
-  findPlayerWindow();
+  if (playerWindow && playerWindow.id === winID) {
+    findPlayerWindow();
+  }
 });
 
 
@@ -88,7 +91,7 @@ chrome.tabs.onUpdated.addListener(function(tabID, info) {
     chrome.tabs.get(tabID, function(tab) {
       // Only move tab if opened in the background.
       if ((!tab.active || !tab.openerTabId) && videoSites.test(tab.url)) {
-        var moveInfo = movedTabs[tab.id] = { tabID: tab.id, playingTabs: [] };
+        movedTabs[tab.id] = { tabID: tab.id, playingTabs: [] };
         tabStack.push(tab.id);
         chrome.tabs.move(tab.id, {
           windowId: playerWindow.id,
@@ -100,37 +103,41 @@ chrome.tabs.onUpdated.addListener(function(tabID, info) {
           }
         });
 
-        // Pause any videos in the same window.
-        chrome.tabs.query({ windowId: playerWindow.id }, function(tabs) {
-          tabs.forEach(function(wintab) {
-            if (wintab.id !== tab.id && controlVideoSites.test(wintab.url)) {
-              var pause = function() {
-                chrome.tabs.sendMessage(wintab.id, {
-                  pause: true
-                }, {}, function(results) {
-                  // Take note if the tab was playing a video
-                  // so that it can be played when the tab is closed.
-                  if (results) {
-                    moveInfo.playingTabs.push(wintab.id);
-                  }
-                });
-              };
-              if (playerExecd[wintab.id]) { pause(); }
-              else {
-                chrome.tabs.executeScript(wintab.id, {
-                  file: 'player.js',
-                }, function() {
-                  playerExecd[wintab.id] = true;
-                  pause();
-                });
-              }
-            }
-          });
-        });
+        pauseWinVideos(tabID);
       }
     });
   }
 });
+
+// Pause any videos in the same window.
+function pauseWinVideos(movedTabID) {
+  chrome.tabs.query({ windowId: playerWindow.id }, function(tabs) {
+    tabs.forEach(function(wintab) {
+      if (wintab.id !== movedTabID && controlVideoSites.test(wintab.url)) {
+        var pause = function() {
+          chrome.tabs.sendMessage(wintab.id, {
+            pause: true
+          }, {}, function(results) {
+            // Take note if the tab was playing a video
+            // so that it can be played when the tab is closed.
+            if (results) {
+              movedTabs[movedTabID].playingTabs.push(wintab.id);
+            }
+          });
+        };
+        if (playerExecd[wintab.id]) { pause(); }
+        else {
+          chrome.tabs.executeScript(wintab.id, {
+            file: 'player.js',
+          }, function() {
+            playerExecd[wintab.id] = true;
+            pause();
+          });
+        }
+      }
+    });
+  });
+}
 
 chrome.tabs.onRemoved.addListener(function(tabID, info) {
   // Don't do anything if this tab isn't one of the moved ones,
@@ -162,6 +169,18 @@ chrome.tabs.onRemoved.addListener(function(tabID, info) {
   delete movedTabs[tabID];
   var i = tabStack.indexOf(tabID);
   if (i > -1) { tabStack.splice(i, 1); }
+});
+
+chrome.tabs.onAttached.addListener(function(tabID, info) {
+  if (lastTabOpened !== tabID) { return; }
+  chrome.tabs.get(tabID, function(tab) {
+    if (!videoSites.test(tab.url)) { return; }
+    chrome.windows.get(info.newWindowId, function(win) {
+      playerWindow = win;
+      clearTimeout(getAllWinsTimeout);
+      pauseWinVideos(tabID);
+    });
+  });
 });
 
 function checkLastTab() {
