@@ -29,7 +29,7 @@ function getAllWins() {
     });
     findPlayerWindow();
   });
-  getAllWinsTimeout = setInterval(getAllWins, 300000);
+  getAllWinsTimeout = setTimeout(getAllWins, 300000);
 }
 
 getAllWins();
