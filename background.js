@@ -5,6 +5,7 @@ var extMonitorWindows = [];
 var playerWindow = null;
 var wins = {};
 function findPlayerWindow() {
+  if (playerWindow) { return; }
   var list = [];
   Object.keys(wins).forEach(function(id) {
     list.push(wins[id]);
@@ -16,23 +17,17 @@ function findPlayerWindow() {
         (win.left > win.width && win.top > win.height);
     });
   playerWindow = extMonitorWindows.sort(function(a, b) {
-      return b.width * b.height - a.width * a.height;
-    })[0];
+    return b.width * b.height - a.width * a.height;
+  })[0];
 }
 
-var getAllWinsTimeout;
-function getAllWins() {
-  chrome.windows.getAll({}, function(list) {
-    wins = {};
-    list.forEach(function(win) {
-      wins[win.id] = win;
-    });
-    findPlayerWindow();
+chrome.windows.getAll({}, function(list) {
+  wins = {};
+  list.forEach(function(win) {
+    wins[win.id] = win;
   });
-  getAllWinsTimeout = setTimeout(getAllWins, 300000);
-}
-
-getAllWins();
+  findPlayerWindow();
+});
 
 chrome.windows.onCreated.addListener(function(win) {
   wins[win.id] = win;
@@ -42,6 +37,7 @@ chrome.windows.onCreated.addListener(function(win) {
 chrome.windows.onRemoved.addListener(function(winID) {
   delete wins[winID];
   if (playerWindow && playerWindow.id === winID) {
+    playerWindow = null;
     findPlayerWindow();
   }
 });
@@ -68,7 +64,7 @@ var playerExecd = {};
 var controlVideoSites = /https?:\/\/(www\.)?(youtube\.com\/(watch|embed)|twitch\.tv\/[a-z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|[^\s]+:32400\/web\/index\.html)/i;
 
 // Video sites that will be matched against when a new tab is created.
-var videoSites = /https?:\/\/(www\.)?((m\.)?youtube\.com\/(watch|embed)|youtu\.be\/[a-z0-9_-]+|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|cringechannel\.com\/\d{4}\/\d{2}\/\d{2}\/video-|dailymotion\.com\/video\/|worldstarhiphop\.com\/videos\/video\.php|liveleak\.com\/view|efukt\.com|facebook\.com\/(video\.php|[^\/]+\/videos\/\d+))/i;
+var videoSites = /https?:\/\/(www\.)?((m\.)?youtube\.com\/(watch|embed)|youtu\.be\/[a-z0-9_-]+|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|cringechannel\.com\/\d{4}\/\d{2}\/\d{2}\/video-|dailymotion\.com\/video\/|worldstarhiphop\.com\/videos\/video\.php|liveleak\.com\/view|efukt\.com|facebook\.com\/(video\.php|[^\/]+\/videos\/))/i;
 
 // `tab` doesn't contain some fields when barely created,
 // namely `tab.active` and `tab.url`. So wait until it is updated.
@@ -154,6 +150,7 @@ chrome.tabs.onRemoved.addListener(function(tabID, info) {
     // time to process.
     setTimeout(function() {
       chrome.tabs.get(tabID, function(tab) {
+        if (!tab) { return; }
         if (tab.active) {
           // Only play tab if active in its window.
           chrome.tabs.sendMessage(tabID, { play: true });
@@ -177,7 +174,6 @@ chrome.tabs.onAttached.addListener(function(tabID, info) {
     if (!videoSites.test(tab.url)) { return; }
     chrome.windows.get(info.newWindowId, function(win) {
       playerWindow = win;
-      clearTimeout(getAllWinsTimeout);
       pauseWinVideos(tabID);
     });
   });
