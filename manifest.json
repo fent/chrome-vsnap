@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "vsnap",
   "description": "Automatically moves video sites to a window on a secondary monitor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "icons": {
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"

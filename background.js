@@ -64,7 +64,7 @@ var playerExecd = {};
 var controlVideoSites = /https?:\/\/(www\.)?(youtube\.com\/(watch|embed)|twitch\.tv\/[a-z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|[^\s]+:32400\/web\/index\.html)/i;
 
 // Video sites that will be matched against when a new tab is created.
-var videoSites = /https?:\/\/(www\.)?((m\.)?youtube\.com\/(watch|embed)|youtu\.be\/[a-z0-9_-]+|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|cringechannel\.com\/\d{4}\/\d{2}\/\d{2}\/video-|dailymotion\.com\/video\/|worldstarhiphop\.com\/videos\/video\.php|liveleak\.com\/view|efukt\.com|facebook\.com\/(video\.php|[^\/]+\/videos\/))/i;
+var videoSites = /https?:\/\/(www\.)?((m\.)?youtube\.com\/(watch|embed)|youtu\.be\/[a-z0-9_-]+|twitch\.tv\/[a-zA-Z0-9_]+\/[cv]\/[0-9]+|netflix\.com\/WiPlayer|cringechannel\.com\/\d{4}\/\d{2}\/\d{2}\/video-|dailymotion\.com\/video\/|worldstarhiphop\.com\/videos\/video\.php|worldstaruncut.com\/uncut\/\d+|liveleak\.com\/view|efukt\.com|facebook\.com\/(video\.php|[^\/]+\/videos\/))/i;
 
 // `tab` doesn't contain some fields when barely created,
 // namely `tab.active` and `tab.url`. So wait until it is updated.
