@@ -1,6 +1,6 @@
 var isCorrectPlayer = window.location.hostname === 'www.twitch.tv' ?
-  function(player) { return player.getVideoTime; } :
-  function(player) { return player.playVideo || player.play; } ;
+  (player) => { return player.getVideoTime; } :
+  (player) => { return player.playVideo || player.play; } ;
 function getPlayer(byId, name) {
   var player = byId ?
     document.getElementById(name) : document.getElementsByTagName(name)[0];

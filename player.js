@@ -5,19 +5,19 @@ function runScript(file, callback) {
   $script.id = '_vsnap';
   $script.src = chrome.extension.getURL(file);
   if (callback) {
-    $script.addEventListener('result', function(e) {
+    $script.addEventListener('result', (e) => {
       callback(e.detail);
       document.body.removeChild($script);
     });
   } else {
-    setTimeout(function() {
+    setTimeout(() => {
       document.body.removeChild($script);
     }, 500);
   }
   document.body.appendChild($script);
 }
 
-chrome.runtime.onMessage.addListener(function(message, _, sendResponse) {
+chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
   if (message.pause) {
     runScript('pause.js', sendResponse);
     return true;

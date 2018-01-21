@@ -7,34 +7,33 @@ var wins = {};
 function findPlayerWindow() {
   if (playerWindow) { return; }
   var list = [];
-  Object.keys(wins).forEach(function(id) {
+  Object.keys(wins).forEach((id) => {
     list.push(wins[id]);
   });
   extMonitorWindows = list
     // Filter out windows that are inside the main window.
-    .filter(function(win) {
+    .filter((win) => {
       return win.top < 0 || win.left < 0 ||
         (win.left > win.width && win.top > win.height);
     });
-  playerWindow = extMonitorWindows.sort(function(a, b) {
-    return b.width * b.height - a.width * a.height;
-  })[0];
+  playerWindow = extMonitorWindows
+    .sort((a, b) => b.width * b.height - a.width * a.height)[0];
 }
 
-chrome.windows.getAll({}, function(list) {
+chrome.windows.getAll({}, (list) => {
   wins = {};
-  list.forEach(function(win) {
+  list.forEach((win) => {
     wins[win.id] = win;
   });
   findPlayerWindow();
 });
 
-chrome.windows.onCreated.addListener(function(win) {
+chrome.windows.onCreated.addListener((win) => {
   wins[win.id] = win;
   findPlayerWindow();
 });
 
-chrome.windows.onRemoved.addListener(function(winID) {
+chrome.windows.onRemoved.addListener((winID) => {
   delete wins[winID];
   if (playerWindow && playerWindow.id === winID) {
     playerWindow = null;
@@ -47,7 +46,7 @@ chrome.windows.onRemoved.addListener(function(winID) {
 // so that when they are removed, vsnap knows to play any paused tabs.
 var movedTabs = {};
 
-// The close last moved shortcut uses this to know what tabs were moved
+// Used by the close-last-moved shortcut to know what tabs were moved
 // in what order.
 var tabStack = [];
 
@@ -70,8 +69,8 @@ var videoSites = /https?:\/\/(www\.)?((m\.)?youtube\.com\/(watch|embed)|youtu\.b
 // namely `tab.active` and `tab.url`. So wait until it is updated.
 var lastTabOpened = null;
 
-chrome.tabs.onCreated.addListener(function(tab) {
-  if (!playerWindow || extMonitorWindows.some(function(win) {
+chrome.tabs.onCreated.addListener((tab) => {
+  if (!playerWindow || extMonitorWindows.some((win) => {
     return win.id === tab.windowId;
   })) {
     return;
@@ -79,12 +78,12 @@ chrome.tabs.onCreated.addListener(function(tab) {
   lastTabOpened = tab.id;
 });
 
-chrome.tabs.onUpdated.addListener(function(tabID, info) {
+chrome.tabs.onUpdated.addListener((tabID, info) => {
   if (info.status || info.url) {
     delete playerExecd[tabID];
   }
   if (lastTabOpened === tabID && info.url) {
-    chrome.tabs.get(tabID, function(tab) {
+    chrome.tabs.get(tabID, (tab) => {
       // Only move tab if opened in the background.
       if ((!tab.active || !tab.openerTabId) && videoSites.test(tab.url)) {
         movedTabs[tab.id] = { tabID: tab.id, playingTabs: [] };
@@ -92,7 +91,7 @@ chrome.tabs.onUpdated.addListener(function(tabID, info) {
         chrome.tabs.move(tab.id, {
           windowId: playerWindow.id,
           index: -1,
-        }, function() {
+        }, () => {
           chrome.tabs.update(tab.id, { active: true });
           if (tab.openerTabId) {
             chrome.windows.update(tab.windowId, { focused: true });
@@ -107,13 +106,13 @@ chrome.tabs.onUpdated.addListener(function(tabID, info) {
 
 // Pause any videos in the same window.
 function pauseWinVideos(movedTabID) {
-  chrome.tabs.query({ windowId: playerWindow.id }, function(tabs) {
-    tabs.forEach(function(wintab) {
+  chrome.tabs.query({ windowId: playerWindow.id }, (tabs) => {
+    tabs.forEach((wintab) => {
       if (wintab.id !== movedTabID && controlVideoSites.test(wintab.url)) {
-        var pause = function() {
+        var pause = () => {
           chrome.tabs.sendMessage(wintab.id, {
             pause: true
-          }, {}, function(results) {
+          }, {}, (results) => {
             // Take note if the tab was playing a video
             // so that it can be played when the tab is closed.
             if (results) {
@@ -125,7 +124,7 @@ function pauseWinVideos(movedTabID) {
         else {
           chrome.tabs.executeScript(wintab.id, {
             file: 'player.js',
-          }, function() {
+          }, () => {
             playerExecd[wintab.id] = true;
             pause();
           });
@@ -135,8 +134,8 @@ function pauseWinVideos(movedTabID) {
   });
 }
 
-chrome.tabs.onRemoved.addListener(function(tabID, info) {
-  // Don't do anything if this tab isn't one of the moved ones,
+chrome.tabs.onRemoved.addListener((tabID, info) => {
+  // Don't do anything if removed tab isn't one of the moved ones,
   // or if it is but was moved to another window,
   // or if it's the last tab in the window.
   if (!movedTabs[tabID] ||
@@ -145,11 +144,11 @@ chrome.tabs.onRemoved.addListener(function(tabID, info) {
   }
 
   // Play every tab that was paused.
-  movedTabs[tabID].playingTabs.forEach(function(tabID) {
+  movedTabs[tabID].playingTabs.forEach((tabID) => {
     // Delay re-playing the video a bit, to give the closed tab some
     // time to process.
-    setTimeout(function() {
-      chrome.tabs.get(tabID, function(tab) {
+    setTimeout(() => {
+      chrome.tabs.get(tabID, (tab) => {
         if (!tab) { return; }
         if (tab.active) {
           // Only play tab if active in its window.
@@ -168,11 +167,11 @@ chrome.tabs.onRemoved.addListener(function(tabID, info) {
   if (i > -1) { tabStack.splice(i, 1); }
 });
 
-chrome.tabs.onAttached.addListener(function(tabID, info) {
+chrome.tabs.onAttached.addListener((tabID, info) => {
   if (lastTabOpened !== tabID) { return; }
-  chrome.tabs.get(tabID, function(tab) {
+  chrome.tabs.get(tabID, (tab) => {
     if (!videoSites.test(tab.url)) { return; }
-    chrome.windows.get(info.newWindowId, function(win) {
+    chrome.windows.get(info.newWindowId, (win) => {
       playerWindow = win;
       pauseWinVideos(tabID);
     });
@@ -182,7 +181,7 @@ chrome.tabs.onAttached.addListener(function(tabID, info) {
 function checkLastTab() {
   if (!tabStack.length) { return; }
   var tabID = tabStack.pop();
-  chrome.tabs.get(tabID, function(tab) {
+  chrome.tabs.get(tabID, (tab) => {
     // Only close tab if it's active and still showing a video.
     if (tab.active && videoSites.test(tab.url)) {
       chrome.tabs.remove(tabID);
@@ -192,6 +191,6 @@ function checkLastTab() {
   });
 }
 
-chrome.commands.onCommand.addListener(function(command) {
+chrome.commands.onCommand.addListener((command) => {
   if (command === 'close-moved-tab') { checkLastTab(); }
 });
